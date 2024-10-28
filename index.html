@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Time Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #2d2d2d;
+            border-radius: 20px;
+            padding: 3rem;
+            width: 95vw;
+            height: 90vh;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            color: #d4b5ff;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .current-time {
+            color: #a855f7;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .office-hours {
+            color: #888;
+            font-size: 1.2rem;
+        }
+
+        .progress-container {
+            margin: 3rem 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .progress-label {
+            background-color: rgba(168, 85, 247, 0.2);
+            color: #d4b5ff;
+            padding: 8px 20px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+        }
+
+        .progress-bar {
+            background-color: rgba(168, 85, 247, 0.2);
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            background-color: #a855f7;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-card {
+            background-color: #3d3d3d;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            color: #d4b5ff;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            color: #d4b5ff;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+
+        .status-in-office {
+            background-color: #22c55e;
+            color: white;
+        }
+
+        .status-outside-office {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .current-time {
+                font-size: 1.8rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1 class="title">Office Time Tracker</h1>
+            <div class="current-time" id="current-time">00:00:00</div>
+            <div class="office-hours">Office Hours: 09:30 AM - 05:00 PM</div>
+            <div id="status-badge" class="status-badge"></div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">Workday Progress</span>
+                <span class="progress-label">
+                    <span id="progress-percentage">0</span>%
+                </span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-label">Time Passed</div>
+                <div class="stat-value" id="time-passed">0:00:00</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⌛</div>
+                <div class="stat-label">Time Left</div>
+                <div class="stat-value" id="time-left">0:00:00</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-label">Total Hours</div>
+                <div class="stat-value">7:30:00</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatTime(hours, minutes, seconds) {
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function updateTimeTracker() {
+            const now = new Date();
+            const currentTime = formatTime(now.getHours(), now.getMinutes(), now.getSeconds());
+            document.getElementById('current-time').textContent = currentTime;
+
+            // Office hours
+            const startTime = new Date();
+            startTime.setHours(9, 30, 0);
+            const endTime = new Date();
+            endTime.setHours(17, 0, 0);
+
+            // Calculate progress
+            let progress = 0;
+            let timePassedText = '0:00:00';
+            let timeLeftText = '7:30:00';
+            let statusText = '';
+            let statusClass = '';
+
+            if (now >= startTime && now <= endTime) {
+                const totalMs = endTime - startTime;
+                const passedMs = now - startTime;
+                progress = (passedMs / totalMs) * 100;
+
+                // Calculate time passed
+                const passedHours = Math.floor(passedMs / (1000 * 60 * 60));
+                const passedMinutes = Math.floor((passedMs % (1000 * 60 * 60)) / (1000 * 60));
+                const passedSeconds = Math.floor((passedMs % (1000 * 60)) / 1000);
+                timePassedText = formatTime(passedHours, passedMinutes, passedSeconds);
+
+                // Calculate time left
+                const leftMs = endTime - now;
+                const leftHours = Math.floor(leftMs / (1000 * 60 * 60));
+                const leftMinutes = Math.floor((leftMs % (1000 * 60 * 60)) / (1000 * 60));
+                const leftSeconds = Math.floor((leftMs % (1000 * 60)) / 1000);
+                timeLeftText = formatTime(leftHours, leftMinutes, leftSeconds);
+
+                statusText = 'In Office Hours';
+                statusClass = 'status-in-office';
+            } else {
+                progress = 0;
+                statusText = 'Outside Office Hours';
+                statusClass = 'status-outside-office';
+            }
+
+            // Update DOM
+            document.getElementById('progress-percentage').textContent = progress.toFixed(2);
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('time-passed').textContent = timePassedText;
+            document.getElementById('time-left').textContent = timeLeftText;
+
+            const statusBadge = document.getElementById('status-badge');
+            statusBadge.textContent = statusText;
+            statusBadge.className = `status-badge ${statusClass}`;
+        }
+
+        // Update immediately and then every second
+        updateTimeTracker();
+        setInterval(updateTimeTracker, 1000);
+    </script>
+</body>
+</html>
